@@ -4,7 +4,8 @@ import plotly.graph_objects as go
 import numpy as np
 from openpyxl import load_workbook
 from datetime import timedelta, date
-from supabase import create_client
+import requests
+import json
 import io
 
 # ── Page Config ───────────────────────────────────────────────────────────────
@@ -50,23 +51,40 @@ st.markdown("""
   .dash-subtitle { font-size:12px; color:#4a7fa5; letter-spacing:1px; margin-top:-4px; }
   header[data-testid="stHeader"] { background:transparent; }
   .block-container { padding-top:1.5rem; }
-  .upload-box {
-    background: #0d1a2d; border: 2px dashed #1e3a5f;
-    border-radius: 12px; padding: 20px; text-align: center;
-    margin-bottom: 16px;
-  }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── Supabase Connection ───────────────────────────────────────────────────────
-@st.cache_resource
-def init_supabase():
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
+# ── Supabase REST API ─────────────────────────────────────────────────────────
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
-supabase = init_supabase()
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+    "Prefer": "return=minimal"
+}
+
+def sb_select(table, params=""):
+    url = f"{SUPABASE_URL}/rest/v1/{table}?{params}"
+    r = requests.get(url, headers=HEADERS)
+    if r.status_code == 200:
+        return r.json()
+    else:
+        st.error(f"Error ambil data: {r.text}")
+        return []
+
+def sb_upsert(table, data):
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    headers = {**HEADERS, "Prefer": "resolution=merge-duplicates"}
+    r = requests.post(url, headers=headers, data=json.dumps(data))
+    return r.status_code in [200, 201, 204]
+
+def sb_delete(table, eq_col, eq_val):
+    url = f"{SUPABASE_URL}/rest/v1/{table}?{eq_col}=eq.{eq_val}"
+    r = requests.delete(url, headers=HEADERS)
+    return r.status_code in [200, 204]
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -104,10 +122,7 @@ def kpi(col, label, value, sub, cls=""):
 
 # ── Parse Excel harian ────────────────────────────────────────────────────────
 def parse_excel_harian(file_bytes, tanggal_upload):
-    """Baca 1 sheet dari file Excel harian (1 hari = 1 file)."""
-    wb   = load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
-    
-    # Cari sheet yang berisi data (bukan Rekap)
+    wb = load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
     target_sheet = None
     for name in wb.sheetnames:
         if name.isdigit():
@@ -116,7 +131,6 @@ def parse_excel_harian(file_bytes, tanggal_upload):
         elif name.lower() not in ["rekap", "summary", "rekapitulasi"]:
             target_sheet = name
             break
-    
     if not target_sheet:
         target_sheet = wb.sheetnames[0]
 
@@ -130,7 +144,6 @@ def parse_excel_harian(file_bytes, tanggal_upload):
         jam = td_to_str(r[0])
         if not jam or jam == "None":
             continue
-
         data.append({
             "tanggal"    : str(tanggal_upload),
             "jam"        : jam,
@@ -145,47 +158,22 @@ def parse_excel_harian(file_bytes, tanggal_upload):
             "volt_s"     : num(r[90]) if len(r) > 90 else None,
             "volt_t"     : num(r[91]) if len(r) > 91 else None,
         })
-
     return data
 
 
-# ── Simpan ke Supabase ────────────────────────────────────────────────────────
-def simpan_ke_supabase(data_list):
-    """Upsert data ke Supabase (update jika sudah ada, insert jika baru)."""
-    if not data_list:
-        return 0
-    try:
-        supabase.table("data_harian").upsert(
-            data_list,
-            on_conflict="tanggal,jam"
-        ).execute()
-        return len(data_list)
-    except Exception as e:
-        st.error(f"Error simpan data: {e}")
-        return 0
-
-
-# ── Ambil data dari Supabase ──────────────────────────────────────────────────
-@st.cache_data(ttl=300)  # cache 5 menit
-def load_data_supabase():
-    """Ambil semua data dari Supabase."""
-    try:
-        res = supabase.table("data_harian").select("*").order("tanggal").order("jam").execute()
-        if res.data:
-            df = pd.DataFrame(res.data)
-            df["tanggal"] = pd.to_datetime(df["tanggal"]).dt.date
-            return df
+# ── Load data ─────────────────────────────────────────────────────────────────
+@st.cache_data(ttl=300)
+def load_data():
+    rows = sb_select("data_harian", "order=tanggal.asc,jam.asc&limit=10000")
+    if not rows:
         return pd.DataFrame()
-    except Exception as e:
-        st.error(f"Error ambil data: {e}")
-        return pd.DataFrame()
-
+    df = pd.DataFrame(rows)
+    df["tanggal"] = pd.to_datetime(df["tanggal"]).dt.date
+    return df
 
 def hitung_summary(df):
-    """Hitung Max, Rata-rata, Min per tanggal."""
     if df.empty:
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-
     cols = ["total_mw","tg1_mw","tg2_mw","tg3_mw","total_pf","total_mvar","volt_r","volt_s","volt_t"]
     df_max = df.groupby("tanggal")[cols].max().reset_index()
     df_avg = df.groupby("tanggal")[cols].mean().reset_index()
@@ -199,39 +187,32 @@ def hitung_summary(df):
 with st.sidebar:
     st.markdown("### ⚡ MONITORING PLTM CILAKI 1-B")
     st.markdown("---")
-
-    # ── Upload harian ────────────────────────────────────────────────────
     st.markdown("**📂 Upload Data Harian**")
-    st.caption("Upload file Excel per hari")
 
     tanggal_upload = st.date_input("Tanggal Data", value=date.today())
-    uploaded = st.file_uploader(
-        "Pilih file Excel",
-        type=["xlsx", "xls"],
-        help="File Excel harian format PLTM Cilaki"
-    )
+    uploaded = st.file_uploader("Pilih file Excel", type=["xlsx","xls"])
 
     if uploaded and st.button("💾 Simpan ke Database", type="primary", use_container_width=True):
         with st.spinner("Memproses dan menyimpan data..."):
             file_bytes = uploaded.read()
             data_list  = parse_excel_harian(file_bytes, tanggal_upload)
             if data_list:
-                n = simpan_ke_supabase(data_list)
-                if n > 0:
-                    st.success(f"✅ {n} data jam berhasil disimpan!")
+                ok = sb_upsert("data_harian", data_list)
+                if ok:
+                    st.success(f"✅ {len(data_list)} data jam berhasil disimpan!")
                     st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error("❌ Gagal menyimpan ke database.")
             else:
                 st.error("❌ Tidak ada data yang terbaca dari file.")
 
     st.markdown("---")
-
-    # ── Threshold ────────────────────────────────────────────────────────
     st.markdown("**⚙️ Threshold Tegangan (kV)**")
-    volt_min  = st.slider("Tegangan Minimum",  18.0, 21.0, 20.0, 0.1)
+    volt_min   = st.slider("Tegangan Minimum",  18.0, 21.0, 20.0, 0.1)
     volt_max_v = st.slider("Tegangan Maksimum", 20.0, 23.0, 21.5, 0.1)
     st.markdown("**⚙️ Batas Beban Normal**")
-    beban_max = st.slider("Beban Maks (MW)", 1.0, 5.0, 2.8, 0.1)
-
+    beban_max  = st.slider("Beban Maks (MW)", 1.0, 5.0, 2.8, 0.1)
     st.markdown("---")
     st.markdown(
         "<div style='color:#4a7fa5;font-size:11px;line-height:1.7'>"
@@ -249,9 +230,8 @@ st.markdown(
     unsafe_allow_html=True)
 st.markdown("")
 
-
 # ── Load data ─────────────────────────────────────────────────────────────────
-df = load_data_supabase()
+df = load_data()
 
 if df.empty:
     st.info("📭 Belum ada data. Silakan upload file Excel harian di sidebar.")
@@ -261,14 +241,10 @@ if df.empty:
     2. Klik **Browse files** dan pilih file Excel harian
     3. Klik tombol **Simpan ke Database**
     4. Data otomatis tersimpan dan dashboard terupdate
-    
-    > Data dari semua upload akan terakumulasi dan bisa dimonitor trendnya.
     """)
     st.stop()
 
 df_max, df_avg, df_min = hitung_summary(df)
-
-# Format tanggal untuk tampilan
 df_max["tgl_str"] = df_max["tanggal"].astype(str)
 df_avg["tgl_str"] = df_avg["tanggal"].astype(str)
 df_min["tgl_str"] = df_min["tanggal"].astype(str)
@@ -312,13 +288,13 @@ with tab1:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["total_mw"],
         mode="lines+markers", name="Beban Max",
-        line=dict(color="#ff6b6b", width=2), marker=dict(size=6)))
+        line=dict(color="#ff6b6b",width=2), marker=dict(size=6)))
     fig.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["total_mw"],
         mode="lines+markers", name="Beban Rata-rata",
-        line=dict(color="#00d4ff", width=2.5), marker=dict(size=6)))
+        line=dict(color="#00d4ff",width=2.5), marker=dict(size=6)))
     fig.add_trace(go.Scatter(x=df_min["tgl_str"], y=df_min["total_mw"],
         mode="lines+markers", name="Beban Min",
-        line=dict(color="#00e676", width=2, dash="dot"), marker=dict(size=4)))
+        line=dict(color="#00e676",width=2,dash="dot"), marker=dict(size=4)))
     fig.add_hline(y=beban_max, line_dash="dash", line_color="#ffb800",
                   annotation_text=f"Batas {beban_max} MW", annotation_font_color="#ffb800")
     fig.update_layout(**LAYOUT, height=350,
@@ -339,19 +315,18 @@ with tab1:
         legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"))
     st.plotly_chart(fig2, use_container_width=True)
 
-    # PF & MVAR
     c1, c2 = st.columns(2)
     with c1:
         st.markdown('<div class="section-header">POWER FACTOR HARIAN</div>', unsafe_allow_html=True)
         fig3 = go.Figure()
         fig3.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["total_pf"],
             mode="lines+markers", name="PF Rata-rata",
-            line=dict(color="#ffb800", width=2), marker=dict(size=5)))
+            line=dict(color="#ffb800",width=2), marker=dict(size=5)))
         fig3.add_hline(y=0.95, line_dash="dot", line_color="#ff4444",
                        annotation_text="Min 0.95", annotation_font_color="#ff4444")
         fig3.update_layout(**LAYOUT, height=260,
             xaxis=dict(**axis(), tickangle=-45),
-            yaxis=dict(**axis("Power Factor"), range=[0.93, 1.0]))
+            yaxis=dict(**axis("Power Factor"), range=[0.93,1.0]))
         st.plotly_chart(fig3, use_container_width=True)
 
     with c2:
@@ -360,7 +335,7 @@ with tab1:
         fig4.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["total_mvar"],
             name="Q Rata-rata", marker_color="#7c4dff"))
         fig4.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["total_mvar"],
-            mode="lines", name="Q Max", line=dict(color="#ff6b6b", dash="dot", width=2)))
+            mode="lines", name="Q Max", line=dict(color="#ff6b6b",dash="dot",width=2)))
         fig4.update_layout(**LAYOUT, height=260,
             xaxis=dict(**axis(), tickangle=-45),
             yaxis=axis("Q (MVAr)"))
@@ -374,14 +349,12 @@ with tab2:
     st.markdown('<div class="section-header">PROFIL BEBAN PER JAM</div>', unsafe_allow_html=True)
 
     tanggal_list = sorted(df["tanggal"].unique(), reverse=True)
-    col_a, col_b = st.columns([1, 3])
+    col_a, col_b = st.columns([1,3])
 
     with col_a:
         pilih_tgl = st.selectbox(
-            "Pilih Tanggal",
-            options=tanggal_list,
-            format_func=lambda x: x.strftime("%d %B %Y") if hasattr(x, 'strftime') else str(x)
-        )
+            "Pilih Tanggal", options=tanggal_list,
+            format_func=lambda x: str(x))
         tampil_unit = st.multiselect(
             "Unit", ["TG1","TG2","TG3","Total"],
             default=["TG1","TG2","TG3","Total"])
@@ -411,18 +384,17 @@ with tab2:
         fig.add_trace(go.Scatter(
             x=df_day.loc[mask,"jam"], y=df_day.loc[mask,col],
             mode="lines+markers", name=unit,
-            line=dict(color=unit_colors[unit], width=2.5), marker=dict(size=6)))
+            line=dict(color=unit_colors[unit],width=2.5), marker=dict(size=6)))
     fig.add_hline(y=beban_max, line_dash="dash", line_color="#ff4444",
                   annotation_text=f"Batas {beban_max} MW", annotation_font_color="#ff4444")
     fig.update_layout(**LAYOUT, height=380,
         title=f"Profil Beban — {pilih_tgl}",
-        title_font=dict(color="#e0f0ff", size=14),
+        title_font=dict(color="#e0f0ff",size=14),
         xaxis=dict(**axis("Jam"), tickangle=-45),
         yaxis=axis("Beban (MW)"),
         legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"))
     st.plotly_chart(fig, use_container_width=True)
 
-    # Tabel harian
     st.markdown('<div class="section-header">DATA PER JAM</div>', unsafe_allow_html=True)
     show_cols = ["jam","tg1_mw","tg2_mw","tg3_mw","total_mw","total_pf","total_mvar"]
     df_show   = df_day[show_cols].rename(columns={
@@ -469,13 +441,10 @@ with tab3:
         legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"))
     st.plotly_chart(fig, use_container_width=True)
 
-    # Profil tegangan per jam
     st.markdown('<div class="section-header">PROFIL TEGANGAN PER JAM</div>', unsafe_allow_html=True)
     pilih_tgl_v = st.selectbox(
-        "Pilih Tanggal",
-        options=tanggal_list,
-        format_func=lambda x: x.strftime("%d %B %Y") if hasattr(x, 'strftime') else str(x),
-        key="volt_day")
+        "Pilih Tanggal", options=tanggal_list,
+        format_func=lambda x: str(x), key="volt_day")
     df_dv = df[df["tanggal"] == pilih_tgl_v].copy()
 
     fig2 = go.Figure()
@@ -492,13 +461,12 @@ with tab3:
     fig2.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
     fig2.update_layout(**LAYOUT, height=340,
         title=f"Tegangan R/S/T — {pilih_tgl_v}",
-        title_font=dict(color="#e0f0ff", size=14),
+        title_font=dict(color="#e0f0ff",size=14),
         xaxis=dict(**axis("Jam"), tickangle=-45),
         yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-1, volt_max_v+0.5]),
         legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"))
     st.plotly_chart(fig2, use_container_width=True)
 
-    # Pelanggaran tegangan
     mask_low  = df["volt_r"].notna() & (df["volt_r"] < volt_min)
     mask_high = df["volt_r"].notna() & (df["volt_r"] > volt_max_v)
     if (mask_low | mask_high).any():
@@ -517,7 +485,6 @@ with tab3:
 with tab4:
     st.markdown('<div class="section-header">DATA LENGKAP</div>', unsafe_allow_html=True)
 
-    # Filter tanggal
     c1, c2 = st.columns(2)
     with c1:
         tgl_dari = st.date_input("Dari Tanggal", value=df["tanggal"].min())
@@ -525,7 +492,6 @@ with tab4:
         tgl_ke   = st.date_input("Sampai Tanggal", value=df["tanggal"].max())
 
     df_filtered = df[(df["tanggal"] >= tgl_dari) & (df["tanggal"] <= tgl_ke)].copy()
-
     show_c = ["tanggal","jam","tg1_mw","tg2_mw","tg3_mw",
               "total_mw","total_pf","total_mvar","volt_r","volt_s","volt_t"]
     fmt = {c:"{:.3f}" for c in show_c if c not in ["tanggal","jam"]}
@@ -533,10 +499,8 @@ with tab4:
 
     st.dataframe(df_filtered[show_c].style.format(fmt, na_rep="-"),
         use_container_width=True, hide_index=True, height=500)
-
     st.markdown(f"**Total: {len(df_filtered)} baris data**")
 
-    # Export
     st.markdown("")
     ex1, ex2 = st.columns(2)
     with ex1:
@@ -553,17 +517,15 @@ with tab4:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True)
 
-    # ── Hapus data ───────────────────────────────────────────────────────
     st.markdown("---")
     st.markdown('<div class="section-header">🗑️ HAPUS DATA</div>', unsafe_allow_html=True)
     st.warning("⚠️ Hati-hati! Data yang dihapus tidak bisa dikembalikan.")
-
     tgl_hapus = st.date_input("Pilih tanggal yang ingin dihapus")
     if st.button("🗑️ Hapus Data Tanggal Ini", type="secondary"):
-        try:
-            supabase.table("data_harian").delete().eq("tanggal", str(tgl_hapus)).execute()
+        ok = sb_delete("data_harian", "tanggal", str(tgl_hapus))
+        if ok:
             st.success(f"✅ Data tanggal {tgl_hapus} berhasil dihapus!")
             st.cache_data.clear()
             st.rerun()
-        except Exception as e:
-            st.error(f"Error: {e}")
+        else:
+            st.error("❌ Gagal menghapus data.")
