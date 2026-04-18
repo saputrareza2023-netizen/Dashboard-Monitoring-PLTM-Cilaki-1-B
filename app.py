@@ -524,7 +524,7 @@ with tab1:
     # Tombol filter periode
     import datetime
     today     = pd.Timestamp(df["tanggal"].max())
-    periode_opt = {"1D":1,"1M":30,"3M":90,"6M":180,"1Y":365,"ALL":99999}
+    periode_opt = {"1D":1,"7D":7,"1M":30,"3M":90,"6M":180,"1Y":365,"ALL":99999}
     sel_col = st.columns(len(periode_opt))
     if "periode_sel" not in st.session_state:
         st.session_state["periode_sel"] = "ALL"
@@ -558,12 +558,17 @@ with tab1:
                   annotation_text=f"Batas {beban_max} MW",
                   annotation_font_color="#f59e0b")
 
-    fig.update_layout(**LAYOUT, height=400,
-        xaxis=dict(**axis("Tanggal"), tickangle=-45,
-                   rangeslider=dict(visible=True, thickness=0.05)),
-        yaxis=axis("Total Beban (MW)"),
+    fig.update_layout(**LAYOUT, height=380,
+        xaxis=dict(**axis("Tanggal"), tickangle=-45),
+        yaxis=dict(**axis("Total Beban (MW)"), rangemode="tozero"),
         showlegend=False,
-        hovermode="x unified")
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="#1a1a2e",
+            font_color="#ffffff",
+            font_size=13,
+            bordercolor="#3b7dd8",
+        ))
     st.plotly_chart(fig, use_container_width=True)
 
     # Kontribusi per unit
