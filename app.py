@@ -322,24 +322,57 @@ with tab1:
 
     st.markdown("")
 
-    # Tren beban
+    # Tren beban dengan filter periode
     st.markdown('<div class="section-header">TREN BEBAN HARIAN (MW)</div>', unsafe_allow_html=True)
+
+    # Tombol filter periode
+    import datetime
+    today     = pd.Timestamp(df["tanggal"].max())
+    periode_opt = {"1M":30,"3M":90,"6M":180,"1Y":365,"ALL":99999}
+    sel_col = st.columns(len(periode_opt))
+    if "periode_sel" not in st.session_state:
+        st.session_state["periode_sel"] = "ALL"
+    for i,(label,_) in enumerate(periode_opt.items()):
+        if sel_col[i].button(label, key=f"btn_{label}",
+            use_container_width=True,
+            type="primary" if st.session_state["periode_sel"]==label else "secondary"):
+            st.session_state["periode_sel"] = label
+
+    hari_filter = periode_opt[st.session_state["periode_sel"]]
+    cutoff      = today - pd.Timedelta(days=hari_filter)
+
+    df_max_f = df_max[pd.to_datetime(df_max["tanggal"]) >= cutoff].copy()
+    df_avg_f = df_avg[pd.to_datetime(df_avg["tanggal"]) >= cutoff].copy()
+    df_min_f = df_min[pd.to_datetime(df_min["tanggal"]) >= cutoff].copy()
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["total_mw"],
-        mode="lines+markers", name="Beban Max",
-        line=dict(color="#ff6b6b",width=2), marker=dict(size=6)))
-    fig.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["total_mw"],
-        mode="lines+markers", name="Beban Rata-rata",
-        line=dict(color="#00d4ff",width=2.5), marker=dict(size=6)))
-    fig.add_trace(go.Scatter(x=df_min["tgl_str"], y=df_min["total_mw"],
-        mode="lines+markers", name="Beban Min",
-        line=dict(color="#00e676",width=2,dash="dot"), marker=dict(size=4)))
+
+    # Area antara min dan max
+    fig.add_trace(go.Scatter(
+        x=pd.concat([df_max_f["tgl_str"], df_min_f["tgl_str"].iloc[::-1]]),
+        y=pd.concat([df_max_f["total_mw"], df_min_f["total_mw"].iloc[::-1]]),
+        fill="toself", fillcolor="rgba(0,212,255,0.07)",
+        line=dict(width=0), showlegend=False, name="Range"))
+
+    fig.add_trace(go.Scatter(x=df_max_f["tgl_str"], y=df_max_f["total_mw"],
+        mode="lines", name="Max",
+        line=dict(color="#ff6b6b", width=1.5, dash="dot")))
+    fig.add_trace(go.Scatter(x=df_avg_f["tgl_str"], y=df_avg_f["total_mw"],
+        mode="lines+markers", name="Rata-rata",
+        line=dict(color="#00d4ff", width=2.5), marker=dict(size=5)))
+    fig.add_trace(go.Scatter(x=df_min_f["tgl_str"], y=df_min_f["total_mw"],
+        mode="lines", name="Min",
+        line=dict(color="#00e676", width=1.5, dash="dot")))
+
     fig.add_hline(y=beban_max, line_dash="dash", line_color="#ffb800",
-                  annotation_text=f"Batas {beban_max} MW", annotation_font_color="#ffb800")
-    fig.update_layout(**LAYOUT, height=350,
-        xaxis=dict(**axis("Tanggal"), tickangle=-45),
+                  annotation_text=f"Batas {beban_max} MW",
+                  annotation_font_color="#ffb800")
+
+    fig.update_layout(**LAYOUT, height=400,
+        xaxis=dict(**axis("Tanggal"), tickangle=-45, rangeslider=dict(visible=True, thickness=0.05)),
         yaxis=axis("Total Beban (MW)"),
-        legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"))
+        legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"),
+        hovermode="x unified")
     st.plotly_chart(fig, use_container_width=True)
 
     # Kontribusi per unit
