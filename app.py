@@ -215,10 +215,13 @@ st.markdown("""
 
   /* ── TITLES ── */
   .dash-title {
-    font-size: 18px !important;
+    font-size: 16px !important;
     color: #1a1a2e !important;
     font-weight: 700;
     letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .dash-subtitle {
     font-size: 12px !important;
@@ -423,7 +426,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**📂 Upload Data Harian**")
 
-    uploaded = st.file_uploader("", type=["xlsx","xls"], label_visibility="collapsed")
+    uploaded = st.file_uploader("File Excel", type=["xlsx","xls"])
     st.caption("📅 Tanggal otomatis dari nama file")
 
     if uploaded and st.button("💾 Simpan ke Database", type="primary", use_container_width=True):
@@ -460,7 +463,7 @@ with st.sidebar:
 # ════════════════════════════════════════════════════════════════════════════
 st.markdown(
     '<div class="dash-title">PLTM Cilaki 1-B</div>'
-    '<div class="dash-subtitle">Monitoring Profil Tegangan & Beban · Real Time</div>',
+    '<div class="dash-subtitle">Monitoring · Profil Tegangan & Beban</div>',
     unsafe_allow_html=True)
 st.markdown("")
 
