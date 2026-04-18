@@ -259,16 +259,24 @@ HEADERS = {
 }
 
 def sb_select(table, params=""):
-    url = f"{SUPABASE_URL}/rest/v1/{table}?{params}"
-    r = requests.get(url, headers=HEADERS)
-    if r.status_code == 200:
-        data = r.json()
-        if isinstance(data, list):
-            return data
-        return []
-    else:
-        st.error(f"Error ambil data: {r.status_code}")
-        return []
+    """Fetch all data with pagination to bypass Supabase 1000 row limit."""
+    all_data = []
+    offset = 0
+    page_size = 1000
+    while True:
+        url = f"{SUPABASE_URL}/rest/v1/{table}?{params}&limit={page_size}&offset={offset}"
+        r = requests.get(url, headers=HEADERS)
+        if r.status_code != 200:
+            st.error(f"Error ambil data: {r.status_code}")
+            break
+        batch = r.json()
+        if not isinstance(batch, list) or len(batch) == 0:
+            break
+        all_data.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+    return all_data
 
 def sb_upsert(table, data):
     url = f"{SUPABASE_URL}/rest/v1/{table}?on_conflict=tanggal,jam"
@@ -396,7 +404,7 @@ def parse_excel_harian(file_bytes, filename, tanggal_override=None):
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 def load_data():
-    rows = sb_select("data_harian", "order=tanggal.asc,jam.asc&limit=50000")
+    rows = sb_select("data_harian", "order=tanggal.asc,jam.asc")
     if not rows:
         return pd.DataFrame()
     df = pd.DataFrame(rows)
