@@ -260,12 +260,14 @@ HEADERS = {
 
 def sb_select(table, params=""):
     url = f"{SUPABASE_URL}/rest/v1/{table}?{params}"
-    headers_with_count = {**HEADERS, "Prefer": "count=exact"}
-    r = requests.get(url, headers=headers_with_count)
+    r = requests.get(url, headers=HEADERS)
     if r.status_code == 200:
-        return r.json()
+        data = r.json()
+        if isinstance(data, list):
+            return data
+        return []
     else:
-        st.error(f"Error ambil data: {r.text}")
+        st.error(f"Error ambil data: {r.status_code}")
         return []
 
 def sb_upsert(table, data):
