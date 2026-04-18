@@ -406,11 +406,11 @@ def hitung_summary(df):
 #  SIDEBAR
 # ════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown("### ⚡ MONITORING PLTM CILAKI 1-B")
+    st.markdown("<div style='font-size:13px;font-weight:700;color:#ffffff;letter-spacing:0.5px'>⚡ PLTM CILAKI 1-B</div>", unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("**📂 Upload Data Harian**")
 
-    uploaded = st.file_uploader("Pilih file Excel", type=["xlsx","xls"])
+    uploaded = st.file_uploader("", type=["xlsx","xls"], label_visibility="collapsed")
     st.caption("📅 Tanggal otomatis dari nama file")
 
     if uploaded and st.button("💾 Simpan ke Database", type="primary", use_container_width=True):
