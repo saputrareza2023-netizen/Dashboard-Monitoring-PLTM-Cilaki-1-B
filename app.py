@@ -347,31 +347,26 @@ with tab1:
 
     fig = go.Figure()
 
-    # Area antara min dan max
     fig.add_trace(go.Scatter(
-        x=pd.concat([df_max_f["tgl_str"], df_min_f["tgl_str"].iloc[::-1]]),
-        y=pd.concat([df_max_f["total_mw"], df_min_f["total_mw"].iloc[::-1]]),
-        fill="toself", fillcolor="rgba(0,212,255,0.07)",
-        line=dict(width=0), showlegend=False, name="Range"))
-
-    fig.add_trace(go.Scatter(x=df_max_f["tgl_str"], y=df_max_f["total_mw"],
-        mode="lines", name="Max",
-        line=dict(color="#ff6b6b", width=1.5, dash="dot")))
-    fig.add_trace(go.Scatter(x=df_avg_f["tgl_str"], y=df_avg_f["total_mw"],
-        mode="lines+markers", name="Rata-rata",
-        line=dict(color="#00d4ff", width=2.5), marker=dict(size=5)))
-    fig.add_trace(go.Scatter(x=df_min_f["tgl_str"], y=df_min_f["total_mw"],
-        mode="lines", name="Min",
-        line=dict(color="#00e676", width=1.5, dash="dot")))
+        x=df_avg_f["tgl_str"],
+        y=df_avg_f["total_mw"],
+        mode="lines",
+        name="Beban (MW)",
+        line=dict(color="#00d4ff", width=2.5),
+        fill="tozeroy",
+        fillcolor="rgba(0,212,255,0.08)",
+        hovertemplate="<b>%{x}</b><br>Beban: %{y:.2f} MW<extra></extra>",
+    ))
 
     fig.add_hline(y=beban_max, line_dash="dash", line_color="#ffb800",
                   annotation_text=f"Batas {beban_max} MW",
                   annotation_font_color="#ffb800")
 
     fig.update_layout(**LAYOUT, height=400,
-        xaxis=dict(**axis("Tanggal"), tickangle=-45, rangeslider=dict(visible=True, thickness=0.05)),
+        xaxis=dict(**axis("Tanggal"), tickangle=-45,
+                   rangeslider=dict(visible=True, thickness=0.05)),
         yaxis=axis("Total Beban (MW)"),
-        legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"),
+        showlegend=False,
         hovermode="x unified")
     st.plotly_chart(fig, use_container_width=True)
 
