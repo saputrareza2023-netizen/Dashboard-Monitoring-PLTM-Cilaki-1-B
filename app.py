@@ -76,10 +76,13 @@ def sb_select(table, params=""):
         return []
 
 def sb_upsert(table, data):
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
-    headers = {**HEADERS, "Prefer": "resolution=merge-duplicates"}
+    url = f"{SUPABASE_URL}/rest/v1/{table}?on_conflict=tanggal,jam"
+    headers = {**HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal"}
     r = requests.post(url, headers=headers, data=json.dumps(data))
-    return r.status_code in [200, 201, 204]
+    if r.status_code not in [200, 201, 204]:
+        st.error(f"Status: {r.status_code} | Error: {r.text}")
+        return False
+    return True
 
 def sb_delete(table, eq_col, eq_val):
     url = f"{SUPABASE_URL}/rest/v1/{table}?{eq_col}=eq.{eq_val}"
