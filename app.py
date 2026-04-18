@@ -260,7 +260,8 @@ HEADERS = {
 
 def sb_select(table, params=""):
     url = f"{SUPABASE_URL}/rest/v1/{table}?{params}"
-    r = requests.get(url, headers=HEADERS)
+    headers_with_count = {**HEADERS, "Prefer": "count=exact"}
+    r = requests.get(url, headers=headers_with_count)
     if r.status_code == 200:
         return r.json()
     else:
@@ -392,9 +393,8 @@ def parse_excel_harian(file_bytes, filename, tanggal_override=None):
 
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-@st.cache_data(ttl=300)
 def load_data():
-    rows = sb_select("data_harian", "order=tanggal.asc,jam.asc&limit=10000")
+    rows = sb_select("data_harian", "order=tanggal.asc,jam.asc&limit=50000")
     if not rows:
         return pd.DataFrame()
     df = pd.DataFrame(rows)
