@@ -304,7 +304,7 @@ LAYOUT   = dict(
 )
 
 def axis(title=""):
-    return dict(title=title, gridcolor=GRID_COL, color="#94a3b8", zerolinecolor=GRID_COL, tickfont=dict(family="Inter", size=11))
+    return dict(title=title, gridcolor="#e2e8f0", color="#111111", zerolinecolor="#e2e8f0", tickfont=dict(family="Inter", size=12, color="#111111"), title_font=dict(color="#111111", size=12))
 
 def kpi(col, label, value, sub, cls=""):
     col.markdown(
