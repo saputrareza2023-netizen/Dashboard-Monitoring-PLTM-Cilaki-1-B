@@ -215,13 +215,10 @@ st.markdown("""
 
   /* ── TITLES ── */
   .dash-title {
-    font-size: 16px !important;
+    font-size: 20px !important;
     color: #1a1a2e !important;
     font-weight: 700;
     letter-spacing: -0.3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .dash-subtitle {
     font-size: 12px !important;
@@ -238,13 +235,9 @@ st.markdown("""
   /* ── BLOCK CONTAINER ── */
   .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
 
-  /* ── HIDE DUPLICATE UPLOAD TEXT ── */
-  [data-testid="stFileUploader"] > label {
+  /* ── FILE UPLOADER ── */
+  [data-testid="stFileUploaderDropzoneInstructions"] div:last-child {
     display: none !important;
-  }
-  [data-testid="stFileUploader"] > div > div > div:first-child span {
-    font-size: 13px !important;
-    color: #94a3b8 !important;
   }
   [data-testid="stFileUploaderDropzone"] {
     padding: 12px !important;
@@ -463,7 +456,7 @@ with st.sidebar:
 # ════════════════════════════════════════════════════════════════════════════
 st.markdown(
     '<div class="dash-title">PLTM Cilaki 1-B</div>'
-    '<div class="dash-subtitle">Monitoring · Profil Tegangan & Beban</div>',
+    '<div class="dash-subtitle">Monitoring Profil Tegangan &amp; Beban · Real Time</div>',
     unsafe_allow_html=True)
 st.markdown("")
 
