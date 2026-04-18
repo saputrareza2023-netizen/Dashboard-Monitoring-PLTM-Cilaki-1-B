@@ -215,7 +215,7 @@ st.markdown("""
 
   /* ── TITLES ── */
   .dash-title {
-    font-size: 22px !important;
+    font-size: 18px !important;
     color: #1a1a2e !important;
     font-weight: 700;
     letter-spacing: -0.3px;
@@ -234,6 +234,19 @@ st.markdown("""
 
   /* ── BLOCK CONTAINER ── */
   .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
+
+  /* ── HIDE DUPLICATE UPLOAD TEXT ── */
+  [data-testid="stFileUploader"] > label {
+    display: none !important;
+  }
+  [data-testid="stFileUploader"] > div > div > div:first-child span {
+    font-size: 13px !important;
+    color: #94a3b8 !important;
+  }
+  [data-testid="stFileUploaderDropzone"] {
+    padding: 12px !important;
+    border-radius: 6px !important;
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -446,8 +459,8 @@ with st.sidebar:
 #  HEADER
 # ════════════════════════════════════════════════════════════════════════════
 st.markdown(
-    '<div class="dash-title">PLTM Cilaki 1-B — Monitoring System</div>'
-    '<div class="dash-subtitle">Profil Tegangan & Beban · Real Time</div>',
+    '<div class="dash-title">PLTM Cilaki 1-B</div>'
+    '<div class="dash-subtitle">Monitoring Profil Tegangan & Beban · Real Time</div>',
     unsafe_allow_html=True)
 st.markdown("")
 
@@ -511,7 +524,7 @@ with tab1:
     # Tombol filter periode
     import datetime
     today     = pd.Timestamp(df["tanggal"].max())
-    periode_opt = {"1M":30,"3M":90,"6M":180,"1Y":365,"ALL":99999}
+    periode_opt = {"1D":1,"1M":30,"3M":90,"6M":180,"1Y":365,"ALL":99999}
     sel_col = st.columns(len(periode_opt))
     if "periode_sel" not in st.session_state:
         st.session_state["periode_sel"] = "ALL"
