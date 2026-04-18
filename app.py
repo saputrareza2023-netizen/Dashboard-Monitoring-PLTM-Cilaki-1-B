@@ -418,8 +418,12 @@ with st.sidebar:
     st.markdown("<div style='font-size:13px;font-weight:700;color:#ffffff;letter-spacing:0.5px'>⚡ PLTM CILAKI 1-B</div>", unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("**📂 Upload Data Harian**")
-
-    uploaded = st.file_uploader("File Excel", type=["xlsx","xls"])
+    st.markdown("""<style>
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"]>div>span{display:none!important}
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] label{display:none!important}
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] small{display:none!important}
+    </style>""", unsafe_allow_html=True)
+    uploaded = st.file_uploader("Upload", type=["xlsx","xls"], label_visibility="collapsed")
     st.caption("📅 Tanggal otomatis dari nama file")
 
     if uploaded and st.button("💾 Simpan ke Database", type="primary", use_container_width=True):
