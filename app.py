@@ -102,9 +102,9 @@ def num(v):
         return float(v)
     return None
 
-DARK_BG  = "#ffffff"
-GRID_COL = "#e8ecf0"
-FONT_COL = "#1a2744"
+DARK_BG  = "#0a0a0a"
+GRID_COL = "#1a1a1a"
+FONT_COL = "#d4a843"
 LAYOUT   = dict(
     plot_bgcolor=DARK_BG, paper_bgcolor=DARK_BG,
     font=dict(color=FONT_COL, family="Barlow"),
@@ -112,7 +112,7 @@ LAYOUT   = dict(
 )
 
 def axis(title=""):
-    return dict(title=title, gridcolor=GRID_COL, color="#5a6a7a", zerolinecolor=GRID_COL)
+    return dict(title=title, gridcolor=GRID_COL, color="#8a6e2a", zerolinecolor=GRID_COL, tickfont=dict(family="IBM Plex Mono", size=11))
 
 def kpi(col, label, value, sub, cls=""):
     col.markdown(
@@ -253,7 +253,7 @@ with st.sidebar:
     beban_max  = st.slider("Beban Maks (MW)", 1.0, 5.0, 2.8, 0.1)
     st.markdown("---")
     st.markdown(
-        "<div style='color:#a8bbd4;font-size:11px;line-height:1.7'>"
+        "<div style='color:#8a6e2a;font-size:11px;line-height:1.7;font-family:IBM Plex Mono,monospace'>"
         "📊 Dashboard Monitoring<br>PLTM Cilaki 1-B<br>"
         "Sistem 20 kV · TG1·TG2·TG3"
         "</div>", unsafe_allow_html=True)
@@ -263,8 +263,8 @@ with st.sidebar:
 #  HEADER
 # ════════════════════════════════════════════════════════════════════════════
 st.markdown(
-    '<div class="dash-title">⚡ MONITORING PLTM CILAKI 1-B</div>'
-    '<div class="dash-subtitle">DASHBOARD PROFIL TEGANGAN & BEBAN — REAL TIME</div>',
+    '<div class="dash-title">▶ PLTM CILAKI 1-B // MONITORING SYSTEM</div>'
+    '<div class="dash-subtitle">PROFIL TEGANGAN & BEBAN · REAL TIME DATA FEED</div>',
     unsafe_allow_html=True)
 st.markdown("")
 
@@ -352,15 +352,15 @@ with tab1:
         y=df_avg_f["total_mw"],
         mode="lines",
         name="Beban (MW)",
-        line=dict(color="#1a5fa8", width=2.5),
+        line=dict(color="#d4a843", width=2.5),
         fill="tozeroy",
-        fillcolor="rgba(26,95,168,0.08)",
+        fillcolor="rgba(212,168,67,0.08)",
         hovertemplate="<b>%{x}</b><br>Beban: %{y:.2f} MW<extra></extra>",
     ))
 
-    fig.add_hline(y=beban_max, line_dash="dash", line_color="#e67e00",
+    fig.add_hline(y=beban_max, line_dash="dash", line_color="#ff8c00",
                   annotation_text=f"Batas {beban_max} MW",
-                  annotation_font_color="#e67e00")
+                  annotation_font_color="#ff8c00")
 
     fig.update_layout(**LAYOUT, height=400,
         xaxis=dict(**axis("Tanggal"), tickangle=-45,
@@ -373,13 +373,13 @@ with tab1:
     # Kontribusi per unit
     st.markdown('<div class="section-header">KONTRIBUSI BEBAN PER UNIT (MW)</div>', unsafe_allow_html=True)
     fig2 = go.Figure()
-    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg1_mw"].fillna(0), name="TG1", marker_color="#1a5fa8"))
-    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg2_mw"].fillna(0), name="TG2", marker_color="#2d7dd2"))
-    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg3_mw"].fillna(0), name="TG3", marker_color="#1a7a4a"))
+    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg1_mw"].fillna(0), name="TG1", marker_color="#d4a843"))
+    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg2_mw"].fillna(0), name="TG2", marker_color="#c49030"))
+    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg3_mw"].fillna(0), name="TG3", marker_color="#00cc66"))
     fig2.update_layout(**LAYOUT, barmode="stack", height=300,
         xaxis=dict(**axis("Tanggal"), tickangle=-45),
         yaxis=axis("Beban (MW)"),
-        legend=dict(bgcolor="#ffffff", bordercolor="#e0e6ed", font=dict(color="#1a2744")))
+        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
     st.plotly_chart(fig2, use_container_width=True)
 
     c1, c2 = st.columns(2)
@@ -388,7 +388,7 @@ with tab1:
         fig3 = go.Figure()
         fig3.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["total_pf"],
             mode="lines+markers", name="PF Rata-rata",
-            line=dict(color="#e67e00",width=2), marker=dict(size=5)))
+            line=dict(color="#ff8c00",width=2), marker=dict(size=5)))
         fig3.add_hline(y=0.95, line_dash="dot", line_color="#ff4444",
                        annotation_text="Min 0.95", annotation_font_color="#ff4444")
         fig3.update_layout(**LAYOUT, height=260,
@@ -400,9 +400,9 @@ with tab1:
         st.markdown('<div class="section-header">DAYA REAKTIF Q (MVAr)</div>', unsafe_allow_html=True)
         fig4 = go.Figure()
         fig4.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["total_mvar"],
-            name="Q Rata-rata", marker_color="#6c3d9e"))
+            name="Q Rata-rata", marker_color="#a855f7"))
         fig4.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["total_mvar"],
-            mode="lines", name="Q Max", line=dict(color="#c0392b",dash="dot",width=2)))
+            mode="lines", name="Q Max", line=dict(color="#ff3333",dash="dot",width=2)))
         fig4.update_layout(**LAYOUT, height=260,
             xaxis=dict(**axis(), tickangle=-45),
             yaxis=axis("Q (MVAr)"))
@@ -441,7 +441,7 @@ with tab2:
             kpi(k4, "PF Rata-rata", f"{pf_v:.4f}", "",
                 "success" if pf_v >= 0.95 else "warning")
 
-    unit_colors = {"TG1":"#1a5fa8","TG2":"#2d7dd2","TG3":"#1a7a4a","Total":"#e67e00"}
+    unit_colors = {"TG1":"#d4a843","TG2":"#c49030","TG3":"#00cc66","Total":"#ff8c00"}
     unit_cols   = {"TG1":"tg1_mw","TG2":"tg2_mw","TG3":"tg3_mw","Total":"total_mw"}
 
     fig = go.Figure()
@@ -459,7 +459,7 @@ with tab2:
         title_font=dict(color="#e0f0ff",size=14),
         xaxis=dict(**axis("Jam"), tickangle=-45),
         yaxis=axis("Beban (MW)"),
-        legend=dict(bgcolor="#ffffff", bordercolor="#e0e6ed", font=dict(color="#1a2744")))
+        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-header">DATA PER JAM</div>', unsafe_allow_html=True)
@@ -489,23 +489,23 @@ with tab3:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["volt_r"],
         mode="lines+markers", name="Max R",
-        line=dict(color="#c0392b",width=2), marker=dict(size=5)))
+        line=dict(color="#ff3333",width=2), marker=dict(size=5)))
     fig.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["volt_r"],
         mode="lines+markers", name="Rata-rata R",
-        line=dict(color="#1a5fa8",width=2.5), marker=dict(size=5)))
+        line=dict(color="#d4a843",width=2.5), marker=dict(size=5)))
     fig.add_trace(go.Scatter(x=df_min["tgl_str"], y=df_min["volt_r"],
         mode="lines+markers", name="Min R",
-        line=dict(color="#1a7a4a",width=2,dash="dot"), marker=dict(size=4)))
+        line=dict(color="#00cc66",width=2,dash="dot"), marker=dict(size=4)))
     fig.add_hrect(y0=volt_min, y1=volt_max_v,
-        fillcolor="rgba(26,95,168,0.05)", line_width=0,
+        fillcolor="rgba(212,168,67,0.05)", line_width=0,
         annotation_text=f"Normal {volt_min}–{volt_max_v} kV",
         annotation_font_color="#4a7fa5", annotation_position="top left")
-    fig.add_hline(y=volt_max_v, line_dash="dot", line_color="#e67e00", line_width=1)
+    fig.add_hline(y=volt_max_v, line_dash="dot", line_color="#ff8c00", line_width=1)
     fig.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
     fig.update_layout(**LAYOUT, height=360,
         xaxis=dict(**axis("Tanggal"), tickangle=-45),
         yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-0.5, volt_max_v+0.3]),
-        legend=dict(bgcolor="#ffffff", bordercolor="#e0e6ed", font=dict(color="#1a2744")))
+        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-header">PROFIL TEGANGAN PER JAM</div>', unsafe_allow_html=True)
@@ -515,7 +515,7 @@ with tab3:
     df_dv = df[df["tanggal"] == pilih_tgl_v].copy()
 
     fig2 = go.Figure()
-    ph = {"volt_r":"#c0392b","volt_s":"#e67e00","volt_t":"#1a7a4a"}
+    ph = {"volt_r":"#ff3333","volt_s":"#ff8c00","volt_t":"#00cc66"}
     pn = {"volt_r":"Phasa R","volt_s":"Phasa S","volt_t":"Phasa T"}
     for col_name, color in ph.items():
         mask = df_dv[col_name].notna()
@@ -523,15 +523,15 @@ with tab3:
             x=df_dv.loc[mask,"jam"], y=df_dv.loc[mask,col_name],
             mode="lines+markers", name=pn[col_name],
             line=dict(color=color,width=2.5), marker=dict(size=5)))
-    fig2.add_hrect(y0=volt_min, y1=volt_max_v, fillcolor="rgba(26,95,168,0.05)", line_width=0)
-    fig2.add_hline(y=volt_max_v, line_dash="dot", line_color="#e67e00", line_width=1)
+    fig2.add_hrect(y0=volt_min, y1=volt_max_v, fillcolor="rgba(212,168,67,0.05)", line_width=0)
+    fig2.add_hline(y=volt_max_v, line_dash="dot", line_color="#ff8c00", line_width=1)
     fig2.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
     fig2.update_layout(**LAYOUT, height=340,
         title=f"Tegangan R/S/T — {pilih_tgl_v}",
         title_font=dict(color="#e0f0ff",size=14),
         xaxis=dict(**axis("Jam"), tickangle=-45),
         yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-1, volt_max_v+0.5]),
-        legend=dict(bgcolor="#ffffff", bordercolor="#e0e6ed", font=dict(color="#1a2744")))
+        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
     st.plotly_chart(fig2, use_container_width=True)
 
     mask_low  = df["volt_r"].notna() & (df["volt_r"] < volt_min)
@@ -678,14 +678,14 @@ with tab5:
                 fig_mom.add_trace(go.Scatter(
                     x=avg_a["hari"], y=avg_a["total_mw"],
                     mode="lines+markers", name=nama_a,
-                    line=dict(color="#1a5fa8", width=2.5),
+                    line=dict(color="#d4a843", width=2.5),
                     marker=dict(size=6),
                 ))
             if not avg_b.empty:
                 fig_mom.add_trace(go.Scatter(
                     x=avg_b["hari"], y=avg_b["total_mw"],
                     mode="lines+markers", name=nama_b,
-                    line=dict(color="#c0392b", width=2.5),
+                    line=dict(color="#ff3333", width=2.5),
                     marker=dict(size=6),
                 ))
             # Area diff
@@ -698,13 +698,13 @@ with tab5:
                     line=dict(width=0), showlegend=False, name="Selisih"
                 ))
 
-            fig_mom.add_hline(y=beban_max, line_dash="dash", line_color="#e67e00",
+            fig_mom.add_hline(y=beban_max, line_dash="dash", line_color="#ff8c00",
                               annotation_text=f"Batas {beban_max} MW",
-                              annotation_font_color="#e67e00")
+                              annotation_font_color="#ff8c00")
             fig_mom.update_layout(**LAYOUT, height=380,
                 xaxis=dict(**axis("Hari ke-"), dtick=1, range=[0.5, 31.5]),
                 yaxis=axis("Beban (MW)"),
-                legend=dict(bgcolor="#ffffff", bordercolor="#e0e6ed", font=dict(color="#1a2744")),
+                legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)),
                 hovermode="x unified")
             st.plotly_chart(fig_mom, use_container_width=True)
 
@@ -715,26 +715,26 @@ with tab5:
                 fig_volt.add_trace(go.Scatter(
                     x=avg_a["hari"], y=avg_a["volt_r"],
                     mode="lines+markers", name=nama_a,
-                    line=dict(color="#1a5fa8", width=2.5),
+                    line=dict(color="#d4a843", width=2.5),
                     marker=dict(size=6),
                 ))
             if not avg_b.empty:
                 fig_volt.add_trace(go.Scatter(
                     x=avg_b["hari"], y=avg_b["volt_r"],
                     mode="lines+markers", name=nama_b,
-                    line=dict(color="#c0392b", width=2.5),
+                    line=dict(color="#ff3333", width=2.5),
                     marker=dict(size=6),
                 ))
             fig_volt.add_hrect(y0=volt_min, y1=volt_max_v,
-                fillcolor="rgba(26,95,168,0.05)", line_width=0,
+                fillcolor="rgba(212,168,67,0.05)", line_width=0,
                 annotation_text=f"Normal {volt_min}–{volt_max_v} kV",
                 annotation_font_color="#4a7fa5", annotation_position="top left")
-            fig_volt.add_hline(y=volt_max_v, line_dash="dot", line_color="#e67e00", line_width=1)
+            fig_volt.add_hline(y=volt_max_v, line_dash="dot", line_color="#ff8c00", line_width=1)
             fig_volt.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
             fig_volt.update_layout(**LAYOUT, height=340,
                 xaxis=dict(**axis("Hari ke-"), dtick=1, range=[0.5, 31.5]),
                 yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-0.5, volt_max_v+0.3]),
-                legend=dict(bgcolor="#ffffff", bordercolor="#e0e6ed", font=dict(color="#1a2744")),
+                legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)),
                 hovermode="x unified")
             st.plotly_chart(fig_volt, use_container_width=True)
 
