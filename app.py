@@ -289,11 +289,12 @@ df_min["tgl_str"] = df_min["tanggal"].astype(str)
 
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊  Ringkasan",
     "📈  Profil Beban",
     "⚡  Profil Tegangan",
     "🗂️  Data Lengkap",
+    "📉  Month on Month",
 ])
 
 
@@ -567,3 +568,169 @@ with tab4:
             st.rerun()
         else:
             st.error("❌ Gagal menghapus data.")
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  TAB 5 — MONTH ON MONTH
+# ════════════════════════════════════════════════════════════════════════════
+with tab5:
+    st.markdown('<div class="section-header">PERBANDINGAN MONTH ON MONTH</div>', unsafe_allow_html=True)
+
+    # Ambil daftar bulan & tahun yang tersedia
+    df["tahun"]  = pd.to_datetime(df["tanggal"]).dt.year
+    df["bulan"]  = pd.to_datetime(df["tanggal"]).dt.month
+    df["hari"]   = pd.to_datetime(df["tanggal"]).dt.day
+
+    tahun_list = sorted(df["tahun"].unique())
+    bulan_list = sorted(df["bulan"].unique())
+    bulan_nama = {1:"Januari",2:"Februari",3:"Maret",4:"April",5:"Mei",6:"Juni",
+                  7:"Juli",8:"Agustus",9:"September",10:"Oktober",11:"November",12:"Desember"}
+
+    if len(tahun_list) < 2:
+        st.warning("⚠️ Perlu minimal data dari **2 tahun berbeda** untuk perbandingan MoM. Silakan upload data tahun lainnya.")
+    else:
+        # Pilihan filter
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pilih_bulan = st.selectbox(
+                "Pilih Bulan",
+                options=bulan_list,
+                format_func=lambda x: bulan_nama.get(x, str(x))
+            )
+        with c2:
+            tahun_a = st.selectbox("Tahun Pertama", options=tahun_list, index=0)
+        with c3:
+            tahun_b = st.selectbox("Tahun Kedua",   options=tahun_list, index=len(tahun_list)-1)
+
+        # Filter data
+        df_a = df[(df["bulan"] == pilih_bulan) & (df["tahun"] == tahun_a)].copy()
+        df_b = df[(df["bulan"] == pilih_bulan) & (df["tahun"] == tahun_b)].copy()
+
+        # Hitung rata-rata per hari
+        cols_agg = ["hari","total_mw","volt_r","volt_s","volt_t","total_pf","total_mvar"]
+        avg_a = df_a.groupby("hari")[["total_mw","volt_r","volt_s","volt_t","total_pf","total_mvar"]].mean().reset_index()
+        avg_b = df_b.groupby("hari")[["total_mw","volt_r","volt_s","volt_t","total_pf","total_mvar"]].mean().reset_index()
+
+        nama_a = f"{bulan_nama.get(pilih_bulan,'')} {tahun_a}"
+        nama_b = f"{bulan_nama.get(pilih_bulan,'')} {tahun_b}"
+
+        if avg_a.empty and avg_b.empty:
+            st.warning("Tidak ada data untuk bulan dan tahun yang dipilih.")
+        else:
+            # ── KPI perbandingan ──────────────────────────────────────────
+            st.markdown("")
+            k1,k2,k3,k4 = st.columns(4)
+            avg_mw_a = avg_a["total_mw"].mean() if not avg_a.empty else 0
+            avg_mw_b = avg_b["total_mw"].mean() if not avg_b.empty else 0
+            delta_mw = avg_mw_b - avg_mw_a
+            delta_pct = (delta_mw / avg_mw_a * 100) if avg_mw_a > 0 else 0
+
+            avg_v_a = avg_a["volt_r"].mean() if not avg_a.empty else 0
+            avg_v_b = avg_b["volt_r"].mean() if not avg_b.empty else 0
+            delta_v = avg_v_b - avg_v_a
+
+            kpi(k1, f"Avg Beban {tahun_a}", f"{avg_mw_a:.2f} MW", nama_a)
+            kpi(k2, f"Avg Beban {tahun_b}", f"{avg_mw_b:.2f} MW", nama_b,
+                "success" if delta_mw >= 0 else "danger")
+            kpi(k3, "Selisih Beban",
+                f"{'↑' if delta_mw>=0 else '↓'} {abs(delta_mw):.2f} MW",
+                f"{delta_pct:+.1f}%",
+                "success" if delta_mw >= 0 else "danger")
+            kpi(k4, "Selisih Tegangan",
+                f"{'↑' if delta_v>=0 else '↓'} {abs(delta_v):.3f} kV",
+                f"{tahun_a} vs {tahun_b}",
+                "success" if abs(delta_v) < 0.5 else "warning")
+
+            st.markdown("")
+
+            # ── Grafik Beban MoM ──────────────────────────────────────────
+            st.markdown('<div class="section-header">PERBANDINGAN BEBAN TOTAL (MW)</div>', unsafe_allow_html=True)
+            fig_mom = go.Figure()
+            if not avg_a.empty:
+                fig_mom.add_trace(go.Scatter(
+                    x=avg_a["hari"], y=avg_a["total_mw"],
+                    mode="lines+markers", name=nama_a,
+                    line=dict(color="#00d4ff", width=2.5),
+                    marker=dict(size=6),
+                ))
+            if not avg_b.empty:
+                fig_mom.add_trace(go.Scatter(
+                    x=avg_b["hari"], y=avg_b["total_mw"],
+                    mode="lines+markers", name=nama_b,
+                    line=dict(color="#ff6b6b", width=2.5),
+                    marker=dict(size=6),
+                ))
+            # Area diff
+            if not avg_a.empty and not avg_b.empty:
+                merged = pd.merge(avg_a[["hari","total_mw"]], avg_b[["hari","total_mw"]],
+                                  on="hari", suffixes=("_a","_b"))
+                fig_mom.add_trace(go.Scatter(
+                    x=merged["hari"], y=merged["total_mw_b"],
+                    fill="tonexty", fillcolor="rgba(255,107,107,0.1)",
+                    line=dict(width=0), showlegend=False, name="Selisih"
+                ))
+
+            fig_mom.add_hline(y=beban_max, line_dash="dash", line_color="#ffb800",
+                              annotation_text=f"Batas {beban_max} MW",
+                              annotation_font_color="#ffb800")
+            fig_mom.update_layout(**LAYOUT, height=380,
+                xaxis=dict(**axis("Hari ke-"), dtick=1, range=[0.5, 31.5]),
+                yaxis=axis("Beban (MW)"),
+                legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"),
+                hovermode="x unified")
+            st.plotly_chart(fig_mom, use_container_width=True)
+
+            # ── Grafik Tegangan MoM ───────────────────────────────────────
+            st.markdown('<div class="section-header">PERBANDINGAN TEGANGAN PHASA R (kV)</div>', unsafe_allow_html=True)
+            fig_volt = go.Figure()
+            if not avg_a.empty:
+                fig_volt.add_trace(go.Scatter(
+                    x=avg_a["hari"], y=avg_a["volt_r"],
+                    mode="lines+markers", name=nama_a,
+                    line=dict(color="#00d4ff", width=2.5),
+                    marker=dict(size=6),
+                ))
+            if not avg_b.empty:
+                fig_volt.add_trace(go.Scatter(
+                    x=avg_b["hari"], y=avg_b["volt_r"],
+                    mode="lines+markers", name=nama_b,
+                    line=dict(color="#ff6b6b", width=2.5),
+                    marker=dict(size=6),
+                ))
+            fig_volt.add_hrect(y0=volt_min, y1=volt_max_v,
+                fillcolor="rgba(0,212,255,0.05)", line_width=0,
+                annotation_text=f"Normal {volt_min}–{volt_max_v} kV",
+                annotation_font_color="#4a7fa5", annotation_position="top left")
+            fig_volt.add_hline(y=volt_max_v, line_dash="dot", line_color="#ffb800", line_width=1)
+            fig_volt.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
+            fig_volt.update_layout(**LAYOUT, height=340,
+                xaxis=dict(**axis("Hari ke-"), dtick=1, range=[0.5, 31.5]),
+                yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-0.5, volt_max_v+0.3]),
+                legend=dict(bgcolor="#0a0e1a", bordercolor="#1e3a5f"),
+                hovermode="x unified")
+            st.plotly_chart(fig_volt, use_container_width=True)
+
+            # ── Tabel perbandingan ────────────────────────────────────────
+            st.markdown('<div class="section-header">TABEL PERBANDINGAN PER HARI</div>', unsafe_allow_html=True)
+            if not avg_a.empty and not avg_b.empty:
+                tbl = pd.merge(
+                    avg_a[["hari","total_mw","volt_r"]].rename(columns={"total_mw":f"MW {tahun_a}","volt_r":f"V_R {tahun_a}"}),
+                    avg_b[["hari","total_mw","volt_r"]].rename(columns={"total_mw":f"MW {tahun_b}","volt_r":f"V_R {tahun_b}"}),
+                    on="hari", how="outer"
+                ).sort_values("hari")
+                tbl["Δ MW"]  = tbl[f"MW {tahun_b}"]  - tbl[f"MW {tahun_a}"]
+                tbl["Δ V_R"] = tbl[f"V_R {tahun_b}"] - tbl[f"V_R {tahun_a}"]
+                tbl["Hari"]  = tbl["hari"].astype(int)
+
+                def color_delta(val):
+                    if pd.isna(val): return ""
+                    return "color:#00e676" if val >= 0 else "color:#ff4444"
+
+                fmt = {f"MW {tahun_a}":"{:.2f}", f"MW {tahun_b}":"{:.2f}",
+                       f"V_R {tahun_a}":"{:.3f}", f"V_R {tahun_b}":"{:.3f}",
+                       "Δ MW":"{:+.2f}", "Δ V_R":"{:+.3f}"}
+                show = ["Hari", f"MW {tahun_a}", f"MW {tahun_b}", "Δ MW", f"V_R {tahun_a}", f"V_R {tahun_b}", "Δ V_R"]
+                st.dataframe(
+                    tbl[show].style.applymap(color_delta, subset=["Δ MW","Δ V_R"]).format(fmt, na_rep="-"),
+                    use_container_width=True, hide_index=True, height=400
+                )
