@@ -430,7 +430,16 @@ def hitung_summary(df):
 #  SIDEBAR
 # ════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown("<div style='font-size:13px;font-weight:700;color:#ffffff;letter-spacing:0.5px'>⚡ PLTM CILAKI 1-B</div>", unsafe_allow_html=True)
+    # Logo SSU
+    st.markdown("""
+    <div style="text-align:center; padding: 10px 0 5px 0;">
+        <img src="https://raw.githubusercontent.com/saputrareza2023-netizen/Dashboard-Monitoring-PLTM-Cilaki-1-B/main/assets/logo.jpg"
+             style="width:80%; max-width:160px; border-radius:8px;"
+             onerror="this.style.display='none'">
+        <div style="font-size:11px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-top:8px;">PLTM CILAKI 1-B</div>
+        <div style="font-size:9px;color:#94a3b8;letter-spacing:0.5px;">a member of DP PLN</div>
+    </div>
+    """, unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("**📂 Upload Data Harian**")
     st.markdown("""<style>
@@ -477,6 +486,31 @@ st.markdown(
     '<div class="dash-title">PLTM Cilaki 1-B</div>'
     '<div class="dash-subtitle">Monitoring Profil Tegangan &amp; Beban · Real Time</div>',
     unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+.slideshow-container{position:relative;width:100%;overflow:hidden;border-radius:10px;margin-bottom:8px;}
+.slide{display:none;}
+.slide img{width:100%;height:200px;object-fit:cover;border-radius:10px;filter:brightness(0.85);}
+.slide-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));color:white;padding:20px 16px 10px;font-size:12px;letter-spacing:0.5px;border-radius:0 0 10px 10px;}
+.active-slide{display:block;}
+</style>
+<div class="slideshow-container">
+  <div class="slide active-slide"><img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1000&q=80"><div class="slide-caption">⚡ PLTM Cilaki 1-B — Pembangkit Listrik Tenaga Minihidro</div></div>
+  <div class="slide"><img src="https://images.unsplash.com/photo-1548613053-22087dd8edb8?w=1000&q=80"><div class="slide-caption">🔧 Turbin & Generator — Teknologi Energi Terbarukan</div></div>
+  <div class="slide"><img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&q=80"><div class="slide-caption">💧 Sungai Cilaki — Sumber Energi Hijau</div></div>
+  <div class="slide"><img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1000&q=80"><div class="slide-caption">🌿 Energi Bersih untuk Indonesia</div></div>
+</div>
+<script>
+(function(){
+  var i=0;
+  var s=document.querySelectorAll('.slide');
+  if(!s.length) return;
+  function go(){s[i].classList.remove('active-slide');i=(i+1)%s.length;s[i].classList.add('active-slide');}
+  setInterval(go,4000);
+})();
+</script>
+""", unsafe_allow_html=True)
 st.markdown("")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
@@ -540,9 +574,9 @@ with tab1:
     # Tren beban dengan filter periode
     st.markdown('<div class="section-header">TREN BEBAN HARIAN (MW)</div>', unsafe_allow_html=True)
 
-    # Tombol filter periode
+    # Tombol filter periode — hitung dari tanggal data terbaru
     import datetime
-    today     = pd.Timestamp(df["tanggal"].max())
+    today     = pd.Timestamp(df_avg["tanggal"].max())
     periode_opt = {"1D":1,"7D":7,"1M":30,"3M":90,"6M":180,"1Y":365,"ALL":99999}
     sel_col = st.columns(len(periode_opt))
     if "periode_sel" not in st.session_state:
