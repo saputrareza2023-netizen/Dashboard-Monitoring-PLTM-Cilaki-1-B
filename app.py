@@ -403,6 +403,11 @@ def load_data():
     df["tanggal"] = pd.to_datetime(df["tanggal"]).dt.date
     return df
 
+def load_data_debug():
+    """Load data with debug info."""
+    rows = sb_select("data_harian", "select=tanggal&order=tanggal.asc&limit=50000")
+    return rows
+
 def hitung_summary(df):
     if df.empty:
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
@@ -468,6 +473,10 @@ st.markdown("")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 df = load_data()
+
+# Debug
+if not df.empty:
+    st.sidebar.caption(f"📊 Total data: {len(df)} baris | {df['tanggal'].nunique()} hari | {df['tanggal'].min()} s/d {df['tanggal'].max()}")
 
 if df.empty:
     st.info("📭 Belum ada data. Silakan upload file Excel harian di sidebar.")
