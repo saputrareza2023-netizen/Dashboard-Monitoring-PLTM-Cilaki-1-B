@@ -19,38 +19,221 @@ st.set_page_config(
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap');
-  html, body, [class*="css"] { font-family: 'Barlow', sans-serif; }
-  .stApp { background-color: #0a0e1a; }
-  section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0d1220 0%, #111827 100%);
-    border-right: 1px solid #1e3a5f;
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  /* ── GLOBAL ── */
+  html, body, [class*="css"], [class*="st-"], div, p, span, label {
+    font-family: 'Inter', sans-serif !important;
+    color: #1a1a2e !important;
   }
+
+  /* ── BACKGROUND ── */
+  .stApp, .main, [data-testid="stAppViewContainer"],
+  [data-testid="stAppViewBlockContainer"], .block-container {
+    background-color: #ffffff !important;
+  }
+
+  /* ── HEADER ── */
+  header[data-testid="stHeader"] {
+    background-color: #1c2333 !important;
+    border-bottom: none !important;
+  }
+  header[data-testid="stHeader"] * { color: #ffffff !important; }
+
+  /* ── SIDEBAR ── */
+  section[data-testid="stSidebar"],
+  section[data-testid="stSidebar"] > div,
+  [data-testid="stSidebarContent"] {
+    background-color: #1c2333 !important;
+    border-right: none !important;
+  }
+  section[data-testid="stSidebar"] * {
+    color: #e2e8f0 !important;
+    background-color: transparent !important;
+  }
+  section[data-testid="stSidebar"] h1,
+  section[data-testid="stSidebar"] h2,
+  section[data-testid="stSidebar"] h3 {
+    color: #ffffff !important;
+  }
+  section[data-testid="stSidebar"] .stButton > button {
+    background-color: #3b7dd8 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+  }
+  section[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #2563c7 !important;
+  }
+  section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    background-color: #243048 !important;
+    border: 1px dashed #4a6080 !important;
+    border-radius: 6px !important;
+  }
+
+  /* ── TABS ── */
+  .stTabs [data-baseweb="tab-list"] {
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    gap: 0 !important;
+  }
+  .stTabs [data-baseweb="tab"] {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 10px 20px !important;
+    border-bottom: 2px solid transparent !important;
+    margin-bottom: -2px !important;
+  }
+  .stTabs [aria-selected="true"] {
+    color: #3b7dd8 !important;
+    border-bottom: 2px solid #3b7dd8 !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+  }
+  .stTabs [data-baseweb="tab-panel"],
+  .stTabs [data-baseweb="tab-panel"] > div {
+    background-color: #ffffff !important;
+  }
+
+  /* ── BUTTONS ── */
+  .stButton > button {
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+  }
+  .stButton > button[kind="primary"] {
+    background-color: #3b7dd8 !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+  .stButton > button[kind="secondary"] {
+    background-color: #ffffff !important;
+    color: #3b7dd8 !important;
+    border: 1px solid #3b7dd8 !important;
+  }
+
+  /* ── INPUTS ── */
+  .stSelectbox > div > div,
+  .stMultiSelect > div > div,
+  [data-baseweb="select"] > div {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    color: #1a1a2e !important;
+  }
+  [data-baseweb="popover"] *, [data-baseweb="menu"] * {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+  }
+  [data-testid="stDateInput"] input {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    color: #1a1a2e !important;
+  }
+  .stSlider [data-baseweb="slider"] div[role="slider"] {
+    background-color: #3b7dd8 !important;
+  }
+
+  /* ── DATAFRAME ── */
+  .stDataFrame, .stDataFrame thead tr th {
+    background-color: #ffffff !important;
+    color: #1a1a2e !important;
+    font-size: 13px !important;
+    border-color: #e2e8f0 !important;
+  }
+  .stDataFrame thead tr th {
+    background-color: #f8fafc !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+  }
+
+  /* ── ALERTS ── */
+  .stAlert {
+    background-color: #eff6ff !important;
+    border-left: 3px solid #3b7dd8 !important;
+    border-radius: 4px !important;
+    color: #1e40af !important;
+  }
+
+  /* ── METRIC CARDS ── */
   .metric-card {
-    background: linear-gradient(135deg, #0f1f35 0%, #132338 100%);
-    border: 1px solid #1e3a5f; border-radius: 12px;
-    padding: 18px 20px; text-align: center;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-    position: relative; overflow: hidden;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    border-top: 3px solid #3b7dd8;
+    border-radius: 6px;
+    padding: 16px 18px;
+    text-align: left;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
-  .metric-card::before {
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background: linear-gradient(90deg, #00d4ff, #0077ff);
+  .metric-card.warning { border-top-color: #f59e0b; }
+  .metric-card.danger  { border-top-color: #ef4444; }
+  .metric-card.success { border-top-color: #10b981; }
+
+  .metric-label {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #94a3b8 !important;
+    margin-bottom: 8px;
   }
-  .metric-card.warning::before { background: linear-gradient(90deg,#ffb800,#ff6d00); }
-  .metric-card.danger::before  { background: linear-gradient(90deg,#ff4444,#cc0000); }
-  .metric-card.success::before { background: linear-gradient(90deg,#00e676,#00b248); }
-  .metric-label { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#4a7fa5; margin-bottom:6px; }
-  .metric-value { font-family:'Share Tech Mono',monospace; font-size:28px; color:#e0f0ff; line-height:1; }
-  .metric-sub   { font-size:11px; color:#4a7fa5; margin-top:5px; }
+  .metric-value {
+    font-size: 26px !important;
+    color: #1a1a2e !important;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .metric-sub {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+    margin-top: 6px;
+  }
+  .metric-card.success .metric-value { color: #10b981 !important; }
+  .metric-card.danger  .metric-value { color: #ef4444 !important; }
+  .metric-card.warning .metric-value { color: #f59e0b !important; }
+
+  /* ── SECTION HEADER ── */
   .section-header {
-    font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase;
-    color:#00d4ff; border-bottom:1px solid #1e3a5f; padding-bottom:8px; margin-bottom:14px;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #64748b !important;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    background: transparent !important;
+    display: block;
   }
-  .dash-title    { font-family:'Share Tech Mono',monospace; font-size:26px; color:#00d4ff; letter-spacing:2px; }
-  .dash-subtitle { font-size:12px; color:#4a7fa5; letter-spacing:1px; margin-top:-4px; }
-  header[data-testid="stHeader"] { background:transparent; }
-  .block-container { padding-top:1.5rem; }
+
+  /* ── TITLES ── */
+  .dash-title {
+    font-size: 22px !important;
+    color: #1a1a2e !important;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .dash-subtitle {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f8fafc; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+  /* ── BLOCK CONTAINER ── */
+  .block-container { padding-top: 1.5rem !important; max-width: 100% !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -102,9 +285,9 @@ def num(v):
         return float(v)
     return None
 
-DARK_BG  = "#0a0a0a"
-GRID_COL = "#1a1a1a"
-FONT_COL = "#d4a843"
+DARK_BG  = "#ffffff"
+GRID_COL = "#f1f5f9"
+FONT_COL = "#1a1a2e"
 LAYOUT   = dict(
     plot_bgcolor=DARK_BG, paper_bgcolor=DARK_BG,
     font=dict(color=FONT_COL, family="Barlow"),
@@ -112,7 +295,7 @@ LAYOUT   = dict(
 )
 
 def axis(title=""):
-    return dict(title=title, gridcolor=GRID_COL, color="#8a6e2a", zerolinecolor=GRID_COL, tickfont=dict(family="IBM Plex Mono", size=11))
+    return dict(title=title, gridcolor=GRID_COL, color="#94a3b8", zerolinecolor=GRID_COL, tickfont=dict(family="Inter", size=11))
 
 def kpi(col, label, value, sub, cls=""):
     col.markdown(
@@ -253,7 +436,7 @@ with st.sidebar:
     beban_max  = st.slider("Beban Maks (MW)", 1.0, 5.0, 2.8, 0.1)
     st.markdown("---")
     st.markdown(
-        "<div style='color:#8a6e2a;font-size:11px;line-height:1.7;font-family:IBM Plex Mono,monospace'>"
+        "<div style='color:#94a3b8;font-size:11px;line-height:1.7'>"
         "📊 Dashboard Monitoring<br>PLTM Cilaki 1-B<br>"
         "Sistem 20 kV · TG1·TG2·TG3"
         "</div>", unsafe_allow_html=True)
@@ -263,8 +446,8 @@ with st.sidebar:
 #  HEADER
 # ════════════════════════════════════════════════════════════════════════════
 st.markdown(
-    '<div class="dash-title">▶ PLTM CILAKI 1-B // MONITORING SYSTEM</div>'
-    '<div class="dash-subtitle">PROFIL TEGANGAN & BEBAN · REAL TIME DATA FEED</div>',
+    '<div class="dash-title">PLTM Cilaki 1-B — Monitoring System</div>'
+    '<div class="dash-subtitle">Profil Tegangan & Beban · Real Time</div>',
     unsafe_allow_html=True)
 st.markdown("")
 
@@ -352,15 +535,15 @@ with tab1:
         y=df_avg_f["total_mw"],
         mode="lines",
         name="Beban (MW)",
-        line=dict(color="#d4a843", width=2.5),
+        line=dict(color="#3b7dd8", width=2.5),
         fill="tozeroy",
-        fillcolor="rgba(212,168,67,0.08)",
+        fillcolor="rgba(59,125,216,0.08)",
         hovertemplate="<b>%{x}</b><br>Beban: %{y:.2f} MW<extra></extra>",
     ))
 
-    fig.add_hline(y=beban_max, line_dash="dash", line_color="#ff8c00",
+    fig.add_hline(y=beban_max, line_dash="dash", line_color="#f59e0b",
                   annotation_text=f"Batas {beban_max} MW",
-                  annotation_font_color="#ff8c00")
+                  annotation_font_color="#f59e0b")
 
     fig.update_layout(**LAYOUT, height=400,
         xaxis=dict(**axis("Tanggal"), tickangle=-45,
@@ -373,13 +556,13 @@ with tab1:
     # Kontribusi per unit
     st.markdown('<div class="section-header">KONTRIBUSI BEBAN PER UNIT (MW)</div>', unsafe_allow_html=True)
     fig2 = go.Figure()
-    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg1_mw"].fillna(0), name="TG1", marker_color="#d4a843"))
-    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg2_mw"].fillna(0), name="TG2", marker_color="#c49030"))
-    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg3_mw"].fillna(0), name="TG3", marker_color="#00cc66"))
+    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg1_mw"].fillna(0), name="TG1", marker_color="#3b7dd8"))
+    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg2_mw"].fillna(0), name="TG2", marker_color="#2563c7"))
+    fig2.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["tg3_mw"].fillna(0), name="TG3", marker_color="#10b981"))
     fig2.update_layout(**LAYOUT, barmode="stack", height=300,
         xaxis=dict(**axis("Tanggal"), tickangle=-45),
         yaxis=axis("Beban (MW)"),
-        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
+        legend=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font=dict(color="#64748b", family="Inter", size=11)))
     st.plotly_chart(fig2, use_container_width=True)
 
     c1, c2 = st.columns(2)
@@ -388,7 +571,7 @@ with tab1:
         fig3 = go.Figure()
         fig3.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["total_pf"],
             mode="lines+markers", name="PF Rata-rata",
-            line=dict(color="#ff8c00",width=2), marker=dict(size=5)))
+            line=dict(color="#f59e0b",width=2), marker=dict(size=5)))
         fig3.add_hline(y=0.95, line_dash="dot", line_color="#ff4444",
                        annotation_text="Min 0.95", annotation_font_color="#ff4444")
         fig3.update_layout(**LAYOUT, height=260,
@@ -400,9 +583,9 @@ with tab1:
         st.markdown('<div class="section-header">DAYA REAKTIF Q (MVAr)</div>', unsafe_allow_html=True)
         fig4 = go.Figure()
         fig4.add_trace(go.Bar(x=df_avg["tgl_str"], y=df_avg["total_mvar"],
-            name="Q Rata-rata", marker_color="#a855f7"))
+            name="Q Rata-rata", marker_color="#8b5cf6"))
         fig4.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["total_mvar"],
-            mode="lines", name="Q Max", line=dict(color="#ff3333",dash="dot",width=2)))
+            mode="lines", name="Q Max", line=dict(color="#ef4444",dash="dot",width=2)))
         fig4.update_layout(**LAYOUT, height=260,
             xaxis=dict(**axis(), tickangle=-45),
             yaxis=axis("Q (MVAr)"))
@@ -441,7 +624,7 @@ with tab2:
             kpi(k4, "PF Rata-rata", f"{pf_v:.4f}", "",
                 "success" if pf_v >= 0.95 else "warning")
 
-    unit_colors = {"TG1":"#d4a843","TG2":"#c49030","TG3":"#00cc66","Total":"#ff8c00"}
+    unit_colors = {"TG1":"#3b7dd8","TG2":"#2563c7","TG3":"#10b981","Total":"#f59e0b"}
     unit_cols   = {"TG1":"tg1_mw","TG2":"tg2_mw","TG3":"tg3_mw","Total":"total_mw"}
 
     fig = go.Figure()
@@ -459,7 +642,7 @@ with tab2:
         title_font=dict(color="#e0f0ff",size=14),
         xaxis=dict(**axis("Jam"), tickangle=-45),
         yaxis=axis("Beban (MW)"),
-        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
+        legend=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font=dict(color="#64748b", family="Inter", size=11)))
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-header">DATA PER JAM</div>', unsafe_allow_html=True)
@@ -489,23 +672,23 @@ with tab3:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df_max["tgl_str"], y=df_max["volt_r"],
         mode="lines+markers", name="Max R",
-        line=dict(color="#ff3333",width=2), marker=dict(size=5)))
+        line=dict(color="#ef4444",width=2), marker=dict(size=5)))
     fig.add_trace(go.Scatter(x=df_avg["tgl_str"], y=df_avg["volt_r"],
         mode="lines+markers", name="Rata-rata R",
-        line=dict(color="#d4a843",width=2.5), marker=dict(size=5)))
+        line=dict(color="#3b7dd8",width=2.5), marker=dict(size=5)))
     fig.add_trace(go.Scatter(x=df_min["tgl_str"], y=df_min["volt_r"],
         mode="lines+markers", name="Min R",
-        line=dict(color="#00cc66",width=2,dash="dot"), marker=dict(size=4)))
+        line=dict(color="#10b981",width=2,dash="dot"), marker=dict(size=4)))
     fig.add_hrect(y0=volt_min, y1=volt_max_v,
-        fillcolor="rgba(212,168,67,0.05)", line_width=0,
+        fillcolor="rgba(59,125,216,0.05)", line_width=0,
         annotation_text=f"Normal {volt_min}–{volt_max_v} kV",
         annotation_font_color="#4a7fa5", annotation_position="top left")
-    fig.add_hline(y=volt_max_v, line_dash="dot", line_color="#ff8c00", line_width=1)
+    fig.add_hline(y=volt_max_v, line_dash="dot", line_color="#f59e0b", line_width=1)
     fig.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
     fig.update_layout(**LAYOUT, height=360,
         xaxis=dict(**axis("Tanggal"), tickangle=-45),
         yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-0.5, volt_max_v+0.3]),
-        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
+        legend=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font=dict(color="#64748b", family="Inter", size=11)))
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="section-header">PROFIL TEGANGAN PER JAM</div>', unsafe_allow_html=True)
@@ -515,7 +698,7 @@ with tab3:
     df_dv = df[df["tanggal"] == pilih_tgl_v].copy()
 
     fig2 = go.Figure()
-    ph = {"volt_r":"#ff3333","volt_s":"#ff8c00","volt_t":"#00cc66"}
+    ph = {"volt_r":"#ef4444","volt_s":"#f59e0b","volt_t":"#10b981"}
     pn = {"volt_r":"Phasa R","volt_s":"Phasa S","volt_t":"Phasa T"}
     for col_name, color in ph.items():
         mask = df_dv[col_name].notna()
@@ -523,15 +706,15 @@ with tab3:
             x=df_dv.loc[mask,"jam"], y=df_dv.loc[mask,col_name],
             mode="lines+markers", name=pn[col_name],
             line=dict(color=color,width=2.5), marker=dict(size=5)))
-    fig2.add_hrect(y0=volt_min, y1=volt_max_v, fillcolor="rgba(212,168,67,0.05)", line_width=0)
-    fig2.add_hline(y=volt_max_v, line_dash="dot", line_color="#ff8c00", line_width=1)
+    fig2.add_hrect(y0=volt_min, y1=volt_max_v, fillcolor="rgba(59,125,216,0.05)", line_width=0)
+    fig2.add_hline(y=volt_max_v, line_dash="dot", line_color="#f59e0b", line_width=1)
     fig2.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
     fig2.update_layout(**LAYOUT, height=340,
         title=f"Tegangan R/S/T — {pilih_tgl_v}",
         title_font=dict(color="#e0f0ff",size=14),
         xaxis=dict(**axis("Jam"), tickangle=-45),
         yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-1, volt_max_v+0.5]),
-        legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)))
+        legend=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font=dict(color="#64748b", family="Inter", size=11)))
     st.plotly_chart(fig2, use_container_width=True)
 
     mask_low  = df["volt_r"].notna() & (df["volt_r"] < volt_min)
@@ -678,14 +861,14 @@ with tab5:
                 fig_mom.add_trace(go.Scatter(
                     x=avg_a["hari"], y=avg_a["total_mw"],
                     mode="lines+markers", name=nama_a,
-                    line=dict(color="#d4a843", width=2.5),
+                    line=dict(color="#3b7dd8", width=2.5),
                     marker=dict(size=6),
                 ))
             if not avg_b.empty:
                 fig_mom.add_trace(go.Scatter(
                     x=avg_b["hari"], y=avg_b["total_mw"],
                     mode="lines+markers", name=nama_b,
-                    line=dict(color="#ff3333", width=2.5),
+                    line=dict(color="#ef4444", width=2.5),
                     marker=dict(size=6),
                 ))
             # Area diff
@@ -698,13 +881,13 @@ with tab5:
                     line=dict(width=0), showlegend=False, name="Selisih"
                 ))
 
-            fig_mom.add_hline(y=beban_max, line_dash="dash", line_color="#ff8c00",
+            fig_mom.add_hline(y=beban_max, line_dash="dash", line_color="#f59e0b",
                               annotation_text=f"Batas {beban_max} MW",
-                              annotation_font_color="#ff8c00")
+                              annotation_font_color="#f59e0b")
             fig_mom.update_layout(**LAYOUT, height=380,
                 xaxis=dict(**axis("Hari ke-"), dtick=1, range=[0.5, 31.5]),
                 yaxis=axis("Beban (MW)"),
-                legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)),
+                legend=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font=dict(color="#64748b", family="Inter", size=11)),
                 hovermode="x unified")
             st.plotly_chart(fig_mom, use_container_width=True)
 
@@ -715,26 +898,26 @@ with tab5:
                 fig_volt.add_trace(go.Scatter(
                     x=avg_a["hari"], y=avg_a["volt_r"],
                     mode="lines+markers", name=nama_a,
-                    line=dict(color="#d4a843", width=2.5),
+                    line=dict(color="#3b7dd8", width=2.5),
                     marker=dict(size=6),
                 ))
             if not avg_b.empty:
                 fig_volt.add_trace(go.Scatter(
                     x=avg_b["hari"], y=avg_b["volt_r"],
                     mode="lines+markers", name=nama_b,
-                    line=dict(color="#ff3333", width=2.5),
+                    line=dict(color="#ef4444", width=2.5),
                     marker=dict(size=6),
                 ))
             fig_volt.add_hrect(y0=volt_min, y1=volt_max_v,
-                fillcolor="rgba(212,168,67,0.05)", line_width=0,
+                fillcolor="rgba(59,125,216,0.05)", line_width=0,
                 annotation_text=f"Normal {volt_min}–{volt_max_v} kV",
                 annotation_font_color="#4a7fa5", annotation_position="top left")
-            fig_volt.add_hline(y=volt_max_v, line_dash="dot", line_color="#ff8c00", line_width=1)
+            fig_volt.add_hline(y=volt_max_v, line_dash="dot", line_color="#f59e0b", line_width=1)
             fig_volt.add_hline(y=volt_min,   line_dash="dot", line_color="#ff4444", line_width=1)
             fig_volt.update_layout(**LAYOUT, height=340,
                 xaxis=dict(**axis("Hari ke-"), dtick=1, range=[0.5, 31.5]),
                 yaxis=dict(**axis("Tegangan (kV)"), range=[volt_min-0.5, volt_max_v+0.3]),
-                legend=dict(bgcolor="#111111", bordercolor="#d4a843", font=dict(color="#d4a843", family="IBM Plex Mono", size=11)),
+                legend=dict(bgcolor="#ffffff", bordercolor="#e2e8f0", font=dict(color="#64748b", family="Inter", size=11)),
                 hovermode="x unified")
             st.plotly_chart(fig_volt, use_container_width=True)
 
